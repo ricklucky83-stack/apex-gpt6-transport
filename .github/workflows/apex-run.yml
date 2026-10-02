@@ -15,18 +15,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Locate request
+      - name: Locate triggering request
         id: req
         shell: bash
         run: |
-          REQUEST=$(find runs -name request.json -type f -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
+          REQUEST=""
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            REQUEST=$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -E '^runs/.+/request\.json$' | tail -1 || true)
+          fi
+          if [ -z "$REQUEST" ]; then
+            REQUEST=$(find runs -name request.json -type f | sort | tail -1)
+          fi
           if [ -z "$REQUEST" ]; then
             echo "No request.json found" >&2
             exit 2
           fi
+          echo "Selected request: $REQUEST"
           echo "request=$REQUEST" >> "$GITHUB_OUTPUT"
       - name: Execute APEX package
         shell: bash
