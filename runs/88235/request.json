@@ -1,0 +1,16 @@
+{
+  "site": "DK",
+  "sport": "NFL",
+  "slate_type": "SHOWDOWN",
+  "contest_id": "88235",
+  "engine_version": "1.33.445",
+  "directives": [
+    "BUILD ONLY PERFECT / NEAR-PERFECT .00001 LINEUPS",
+    "NO FORCED BOARD SIZE",
+    "NO BACKFILL"
+  ],
+  "engine_file": "engine.zip",
+  "player_file": "player.csv",
+  "expected_engine_sha256": "7e142a7ffcea175aadf1c49e6835b539ac58c5749691ea4522fd0a849fe5290a",
+  "expected_player_sha256": "908d93266151dd71961c1806320a7b4c4df61dd37b463b9cebf12d8d1e627d0b"
+}
