@@ -23,5 +23,6 @@
     "numba",
     "joblib",
     "python-dotenv"
-  ]
+  ],
+  "transport_attempt": 2
 }
