@@ -1,0 +1,34 @@
+{
+  "site": "DK",
+  "sport": "NFL",
+  "slate_type": "SHOWDOWN",
+  "contest_id": "88235",
+  "field_size": 88235,
+  "engine_version": "1.33.445",
+  "mc_worlds": 200000,
+  "directives": [
+    "BUILD ONLY PERFECT / NEAR-PERFECT .00001 LINEUPS",
+    "NO FORCED BOARD SIZE",
+    "NO BACKFILL"
+  ],
+  "engine_url": "https://raw.githubusercontent.com/ricklucky83-stack/engine/25440542ae18134fb9d7834b2bd1b1c2bd80a79d/APEX_1.33.445_GLOBAL_SELF_CONTAINED_SIMPLE_CONTRACT.zip",
+  "player_parts": [
+    "../88235-v2/player_00.b64",
+    "../88235-v2/player_01.b64",
+    "../88235-v2/player_02.b64",
+    "../88235-v2/player_03.b64"
+  ],
+  "expected_engine_sha256": "3944c5cbfc92e8c14f63516bad764d35a422d01cb3fe43f39db101c643f711ca",
+  "expected_player_sha256": "908d93266151dd71961c1806320a7b4c4df61dd37b463b9cebf12d8d1e627d0b",
+  "runtime_repair_id": "APEX_1.33.445_POST_ROUTING_EXECUTION_PLUMBING_v1",
+  "runtime_repair_target_sha256": "33a5bb7f0ef999ae6c197ec02c16d3df285b059997964a8ecdacb4d2f7aebc76",
+  "python_requirements": [
+    "numpy",
+    "pandas",
+    "scipy",
+    "cryptography",
+    "numba",
+    "joblib",
+    "python-dotenv"
+  ]
+}
