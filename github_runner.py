@@ -34,6 +34,33 @@ def materialize_source(run_dir,req):
     target.write_text(''.join((run_dir/p).read_text(encoding='utf-8') for p in parts),encoding='utf-8')
     return target
 
+def apply_runtime_repair(work,req,receipt,out_dir):
+    repair_id=req.get('runtime_repair_id')
+    if not repair_id: return
+    if repair_id!='APEX_1.33.445_POST_ROUTING_EXECUTION_PLUMBING_v1':
+        raise RuntimeError(f'UNSUPPORTED_RUNTIME_REPAIR:{repair_id}')
+    target=work/'engines'/'common'/'apex_global_production_board_runner_v1.py'
+    expected=str(req.get('runtime_repair_target_sha256') or '')
+    actual=sha256(target)
+    if actual!=expected:
+        raise RuntimeError(f'RUNTIME_REPAIR_TARGET_HASH_MISMATCH:{actual}')
+    src=target.read_text(encoding='utf-8')
+    old="CHILD_RETURN_CODE=p.returncode"
+    new="CHILD_RETURN_CODE=child_rc"
+    if src.count(old)!=1:
+        raise RuntimeError(f'RUNTIME_REPAIR_PATTERN_COUNT:{src.count(old)}')
+    target.write_text(src.replace(old,new,1),encoding='utf-8')
+    repair={
+      'REPAIR_ID':repair_id,
+      'TARGET':'engines/common/apex_global_production_board_runner_v1.py',
+      'ORIGINAL_SHA256':actual,
+      'REPAIRED_SHA256':sha256(target),
+      'CHANGE':'p.returncode -> child_rc in terminal proof receipt only',
+      'LINEUP_LOGIC_CHANGED':False
+    }
+    receipt['runtime_repair']=repair
+    write_json(out_dir/'RUNTIME_REPAIR_RECEIPT.json',repair)
+
 request_path=pathlib.Path(sys.argv[1]).resolve()
 out_dir=pathlib.Path(sys.argv[2]).resolve(); out_dir.mkdir(parents=True,exist_ok=True)
 req=json.loads(request_path.read_text(encoding='utf-8')); run_dir=request_path.parent
@@ -75,6 +102,15 @@ try:
                     (out_dir/'dependency_install_stderr.log').write_text(dep.stderr,encoding='utf-8')
                     receipt['dependency_install_returncode']=dep.returncode
                     if dep.returncode!=0: receipt.update({'status':'DEPENDENCY_INSTALL_FAILED','blocking_reason':'ENGINE_REQUIREMENTS_INSTALL_FAILED','final_board_allowed':False})
+                reqs=req.get('python_requirements') or []
+                if reqs and receipt.get('status')!='DEPENDENCY_INSTALL_FAILED':
+                    dep2=subprocess.run([sys.executable,'-m','pip','install','--disable-pip-version-check',*map(str,reqs)],cwd=work,text=True,capture_output=True)
+                    (out_dir/'dependency_install_extra_stdout.log').write_text(dep2.stdout,encoding='utf-8')
+                    (out_dir/'dependency_install_extra_stderr.log').write_text(dep2.stderr,encoding='utf-8')
+                    receipt['dependency_install_extra_returncode']=dep2.returncode
+                    if dep2.returncode!=0: receipt.update({'status':'DEPENDENCY_INSTALL_FAILED','blocking_reason':'ENGINE_PYTHON_REQUIREMENTS_INSTALL_FAILED','final_board_allowed':False})
+                if receipt.get('status')!='DEPENDENCY_INSTALL_FAILED':
+                    apply_runtime_repair(work,req,receipt,out_dir)
         if receipt.get('status') not in {'DEPENDENCY_INSTALL_FAILED','ENGINE_PACKAGE_INCOMPLETE'}:
             env=os.environ.copy(); env.update({
               'APEX_SITE':str(req['site']),'APEX_SPORT':str(req['sport']),'APEX_SLATE_TYPE':str(req['slate_type']),
