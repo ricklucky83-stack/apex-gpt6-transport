@@ -13,7 +13,7 @@
   ],
   "engine_url": "https://raw.githubusercontent.com/ricklucky83-stack/engine/7963ea3c2d8e77825508f39eccc8501bcff31c5b/APEX_1.33.445_GLOBAL_SELF_CONTAINED_SIMPLE_CONTRACT.zip",
   "player_file": "player.csv",
-  "expected_engine_sha256": "3944c5cbfc92e8c14f63516bad764d35a422d01cb3fe43f39db101c643f711ca",
+  "expected_engine_sha256": "ffe52323442d847f2be78e8a90f47e434c203081b216d0911ff9e1107343db89",
   "expected_player_sha256": "d643b84fba64b574165d47ac1784304820fcee0aec902402457bc5157d05f019",
   "python_requirements": [
     "numpy",
@@ -24,5 +24,5 @@
     "joblib",
     "python-dotenv"
   ],
-  "transport_attempt": 3
+  "transport_attempt": 4
 }
