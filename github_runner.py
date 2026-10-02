@@ -1,5 +1,5 @@
 from __future__ import annotations
-import base64, hashlib, json, os, pathlib, subprocess, sys, traceback, zipfile
+import base64, hashlib, json, os, pathlib, subprocess, sys, traceback, zipfile, urllib.request
 
 def sha256(path):
     h=hashlib.sha256()
@@ -11,7 +11,16 @@ def write_json(path,obj):
     pathlib.Path(path).write_text(json.dumps(obj,indent=2,sort_keys=True),encoding='utf-8')
 
 def materialize_binary(run_dir,req,key):
-    direct=req.get(f'{key}_file'); parts=req.get(f'{key}_parts')
+    direct=req.get(f'{key}_file'); parts=req.get(f'{key}_parts'); url=req.get(f'{key}_url')
+    if url:
+        target=run_dir/f'.materialized_{key}'
+        request=urllib.request.Request(str(url),headers={'User-Agent':'APEX-GitHub-Runner/1.33.445'})
+        with urllib.request.urlopen(request,timeout=180) as src, open(target,'wb') as dst:
+            while True:
+                block=src.read(1024*1024)
+                if not block: break
+                dst.write(block)
+        return target
     if parts:
         target=run_dir/f'.materialized_{key}'
         data=''.join((run_dir/p).read_text(encoding='ascii').strip() for p in parts)
