@@ -58,21 +58,38 @@ try:
             log.append('BLOCKED: engine ZIP contains the contract/patch but not the production runner.')
             log.append(f'MISSING: {expected}')
         else:
-            env=os.environ.copy()
-            env.update({
-              'APEX_SITE':str(req['site']),
-              'APEX_SPORT':str(req['sport']),
-              'APEX_SLATE_TYPE':str(req['slate_type']),
-              'APEX_CONTEST_ID':str(req['contest_id']),
-              'APEX_PLAYER_CSV':str(player),
-              'APEX_OUTPUT_DIR':str(out_dir),
-            })
-            p=subprocess.run([sys.executable,str(runner)],cwd=work,env=env,text=True,capture_output=True)
-            (out_dir/'engine_stdout.log').write_text(p.stdout,encoding='utf-8')
-            (out_dir/'engine_stderr.log').write_text(p.stderr,encoding='utf-8')
-            receipt['runner_returncode']=p.returncode
-            receipt['status']='COMPLETE' if p.returncode==0 else 'ENGINE_EXECUTION_FAILED'
-            receipt['final_board_allowed']=(p.returncode==0 and (out_dir/'FINAL_BOARD.csv').exists())
+            requirements=work/'requirements.txt'
+            if requirements.exists():
+                dep=subprocess.run(
+                    [sys.executable,'-m','pip','install','--disable-pip-version-check','-r',str(requirements)],
+                    cwd=work,text=True,capture_output=True
+                )
+                (out_dir/'dependency_install_stdout.log').write_text(dep.stdout,encoding='utf-8')
+                (out_dir/'dependency_install_stderr.log').write_text(dep.stderr,encoding='utf-8')
+                receipt['dependency_install_returncode']=dep.returncode
+                if dep.returncode != 0:
+                    receipt.update({'status':'DEPENDENCY_INSTALL_FAILED','blocking_reason':'ENGINE_REQUIREMENTS_INSTALL_FAILED','final_board_allowed':False})
+                    log.append('BLOCKED: engine requirements installation failed.')
+                else:
+                    receipt['dependencies_installed']=True
+            if receipt.get('status') != 'DEPENDENCY_INSTALL_FAILED':
+                env=os.environ.copy()
+                env.update({
+                  'APEX_SITE':str(req['site']),
+                  'APEX_SPORT':str(req['sport']),
+                  'APEX_SLATE_TYPE':str(req['slate_type']),
+                  'APEX_CONTEST_ID':str(req['contest_id']),
+                  'APEX_FIELD_SIZE':str(req.get('field_size',req['contest_id'])),
+                  'APEX_MC_WORLDS':str(req.get('mc_worlds',200000)),
+                  'APEX_PLAYER_CSV':str(player),
+                  'APEX_OUTPUT_DIR':str(out_dir),
+                })
+                p=subprocess.run([sys.executable,str(runner)],cwd=work,env=env,text=True,capture_output=True)
+                (out_dir/'engine_stdout.log').write_text(p.stdout,encoding='utf-8')
+                (out_dir/'engine_stderr.log').write_text(p.stderr,encoding='utf-8')
+                receipt['runner_returncode']=p.returncode
+                receipt['status']='COMPLETE' if p.returncode==0 else 'ENGINE_EXECUTION_FAILED'
+                receipt['final_board_allowed']=(p.returncode==0 and (out_dir/'FINAL_BOARD.csv').exists())
 except Exception as e:
     receipt.update({'status':'HARNESS_ERROR','blocking_reason':repr(e),'final_board_allowed':False})
     log.append(traceback.format_exc())
