@@ -117,7 +117,13 @@ try:
               'APEX_CONTEST_ID':str(req['contest_id']),'APEX_FIELD_SIZE':str(req.get('field_size',req['contest_id'])),
               'APEX_MC_WORLDS':str(req.get('mc_worlds',200000)),'APEX_PLAYER_CSV':str(player),'APEX_OUTPUT_DIR':str(out_dir),
             })
-            p=subprocess.run([sys.executable,str(runner)],cwd=work,env=env,text=True,capture_output=True)
+            driver=req.get('engine_driver')
+            exec_runner=(pathlib.Path(__file__).resolve().parent/str(driver)).resolve() if driver else runner
+            if driver and not exec_runner.exists():
+                raise RuntimeError(f'ENGINE_DRIVER_MISSING:{exec_runner}')
+            env['APEX_ENGINE_ROOT']=str(work)
+            receipt['engine_entrypoint']=str(exec_runner)
+            p=subprocess.run([sys.executable,str(exec_runner)],cwd=work,env=env,text=True,capture_output=True)
             (out_dir/'engine_stdout.log').write_text(p.stdout,encoding='utf-8'); (out_dir/'engine_stderr.log').write_text(p.stderr,encoding='utf-8')
             receipt['runner_returncode']=p.returncode
             receipt['status']='COMPLETE' if p.returncode==0 else 'ENGINE_EXECUTION_FAILED'
