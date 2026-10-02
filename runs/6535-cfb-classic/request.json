@@ -1,0 +1,27 @@
+{
+  "site": "DK",
+  "sport": "CFB",
+  "slate_type": "CLASSIC",
+  "contest_id": "6535",
+  "field_size": 6535,
+  "engine_version": "1.33.445",
+  "mc_worlds": 200000,
+  "directives": [
+    "BUILD ONLY PERFECT / NEAR-PERFECT .00001 LINEUPS",
+    "NO FORCED BOARD SIZE",
+    "NO BACKFILL"
+  ],
+  "engine_url": "https://raw.githubusercontent.com/ricklucky83-stack/engine/25440542ae18134fb9d7834b2bd1b1c2bd80a79d/APEX_1.33.445_GLOBAL_SELF_CONTAINED_SIMPLE_CONTRACT.zip",
+  "player_file": "player.csv",
+  "expected_engine_sha256": "3944c5cbfc92e8c14f63516bad764d35a422d01cb3fe43f39db101c643f711ca",
+  "expected_player_sha256": "d643b84fba64b574165d47ac1784304820fcee0aec902402457bc5157d05f019",
+  "python_requirements": [
+    "numpy",
+    "pandas",
+    "scipy",
+    "cryptography",
+    "numba",
+    "joblib",
+    "python-dotenv"
+  ]
+}
