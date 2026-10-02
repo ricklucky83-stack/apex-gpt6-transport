@@ -1,0 +1,42 @@
+name: APEX GitHub Runner
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'runs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apex:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Locate request
+        id: req
+        shell: bash
+        run: |
+          REQUEST=$(find runs -name request.json -type f -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
+          if [ -z "$REQUEST" ]; then
+            echo "No request.json found" >&2
+            exit 2
+          fi
+          echo "request=$REQUEST" >> "$GITHUB_OUTPUT"
+      - name: Execute APEX package
+        shell: bash
+        run: |
+          mkdir -p result
+          python github_runner.py "${{ steps.req.outputs.request }}" result
+      - name: Upload APEX results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-result-${{ github.run_id }}
+          path: result/
+          if-no-files-found: error
